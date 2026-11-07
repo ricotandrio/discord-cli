@@ -11,7 +11,7 @@
     "mcp": "node dist/mcp.js"
   },
   "devDependencies": {
-    "@types/node": "^22.0.0",
+    "@types/node": "^22.20.5",
     "typescript": "^5.7.0"
   }
 }

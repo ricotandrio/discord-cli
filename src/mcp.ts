@@ -1,7 +1,8 @@
 import { createInterface } from "node:readline";
+import { readBotToken } from "./config.js";
 import { DiscordApiTransport, MessagingService } from "./service.js";
 
-const token = process.env.DISCORD_BOT_TOKEN;
+const token = await readBotToken();
 const service = token ? new MessagingService(new DiscordApiTransport(token)) : undefined;
 
 const tools = [
@@ -20,7 +21,7 @@ for await (const line of input) {
 
 async function handle(method: string, params: Record<string, string>): Promise<unknown> {
   if (method === "tools/list") return { tools };
-  if (!service) return { ok: false, error: { code: "auth_error", message: "DISCORD_BOT_TOKEN is required" } };
+  if (!service) return { ok: false, error: { code: "auth_error", message: "Bot token was not found in ~/mcp.json" } };
   const content = params.content;
   if (!content) return { ok: false, error: { code: "invalid_input", message: "content is required" } };
   if (method === "message.send") return service.sendToChannel(params.channel_id ?? "", content);

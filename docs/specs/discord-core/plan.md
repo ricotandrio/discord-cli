@@ -10,8 +10,8 @@ only: channel send, message reply, thread send, and thread reply.
 
 ## Prerequisites
 - The linked spec is Approved.
-- Exact command/tool naming and config-file behavior remain decision-needed;
-  provisional names and `DISCORD_BOT_TOKEN` are used for this slice.
+- Exact command/tool naming remains decision-needed. The bot token is read from
+  `~/mcp.json` using the documented loader shape.
 
 ## Phases
 
@@ -93,6 +93,6 @@ only: channel send, message reply, thread send, and thread reply.
 - Live Discord integration tests remain opt-in.
 
 ## Deviations
-- Exact command/tool naming and config-file behavior remain decision-needed.
-  The implementation uses the provisional names in the approved interface
-  table and `DISCORD_BOT_TOKEN` only.
+- Exact command/tool naming remains decision-needed. The implementation uses
+  the provisional names in the approved interface table and reads the token from
+  `~/mcp.json`.

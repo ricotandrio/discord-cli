@@ -1,3 +1,4 @@
+import { readBotToken } from "./config.js";
 import { DiscordApiTransport, MessagingService } from "./service.js";
 import type { Result } from "./types.js";
 
@@ -17,8 +18,8 @@ if (domain !== "message" && domain !== "thread") {
 }
 
 const flags = parseFlags(args.slice(2));
-const token = process.env.DISCORD_BOT_TOKEN;
-if (!token) fail("auth_error", "DISCORD_BOT_TOKEN is required");
+const token = await readBotToken();
+if (!token) fail("auth_error", "Bot token was not found in ~/mcp.json");
 
 const service = new MessagingService(new DiscordApiTransport(token));
 const content = flags.content;
