@@ -11,13 +11,29 @@ export type MessagePayload = {
   };
 };
 
-export type DiscordMessage = {
+export type DiscordMessage = Record<string, unknown> & {
   id: string;
   channel_id: string;
   author: Record<string, unknown>;
   content: string;
   timestamp: string;
   attachments: Array<Record<string, unknown>>;
+};
+
+export type DiscordChannel = Record<string, unknown> & { id: string };
+
+export type MessageQuery = {
+  limit?: string;
+  before?: string;
+  after?: string;
+  around?: string;
+};
+
+export type ThreadCreateOptions = {
+  name: string;
+  auto_archive_duration?: string;
+  rate_limit_per_user?: string;
+  invitable?: string;
 };
 
 export type ApiError = {

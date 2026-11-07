@@ -10,6 +10,14 @@ const tools = [
   "message.reply",
   "thread.send",
   "thread.reply",
+  "channel.messages",
+  "thread.messages",
+  "message.get",
+  "search.messages",
+  "thread.list-active",
+  "thread.get",
+  "thread.create-from-message",
+  "thread.create",
 ];
 
 const input = createInterface({ input: process.stdin });
@@ -23,10 +31,27 @@ async function handle(method: string, params: Record<string, string>): Promise<u
   if (method === "tools/list") return { tools };
   if (!service) return { ok: false, error: { code: "auth_error", message: "Bot token was not found in ~/mcp.json" } };
   const content = params.content;
-  if (!content) return { ok: false, error: { code: "invalid_input", message: "content is required" } };
-  if (method === "message.send") return service.sendToChannel(params.channel_id ?? "", content);
-  if (method === "message.reply") return service.replyToMessage(params.channel_id ?? "", params.message_id ?? "", content);
-  if (method === "thread.send") return service.sendToThread(params.thread_id ?? "", content);
-  if (method === "thread.reply") return service.replyInThread(params.thread_id ?? "", params.message_id ?? "", content);
+  if (method === "message.send") return service.sendToChannel(params.channel_id ?? "", content ?? "");
+  if (method === "message.reply") return service.replyToMessage(params.channel_id ?? "", params.message_id ?? "", content ?? "");
+  if (method === "thread.send") return service.sendToThread(params.thread_id ?? "", content ?? "");
+  if (method === "thread.reply") return service.replyInThread(params.thread_id ?? "", params.message_id ?? "", content ?? "");
+  if (method === "channel.messages") return service.listMessages(params.channel_id ?? "", params);
+  if (method === "thread.messages") return service.listMessages(params.thread_id ?? "", params);
+  if (method === "message.get") return service.getMessage(params.channel_id ?? "", params.message_id ?? "");
+  if (method === "search.messages") return service.searchMessages();
+  if (method === "thread.list-active") return service.listActiveThreads(params.channel_id ?? "");
+  if (method === "thread.get") return service.getThread(params.thread_id ?? "");
+  if (method === "thread.create-from-message") return service.createThreadFromMessage(params.channel_id ?? "", params.message_id ?? "", {
+    name: params.name ?? "",
+    auto_archive_duration: params.auto_archive_duration,
+    rate_limit_per_user: params.rate_limit_per_user,
+    invitable: params.invitable,
+  });
+  if (method === "thread.create") return service.createThread(params.channel_id ?? "", {
+    name: params.name ?? "",
+    auto_archive_duration: params.auto_archive_duration,
+    rate_limit_per_user: params.rate_limit_per_user,
+    invitable: params.invitable,
+  });
   return { ok: false, error: { code: "invalid_input", message: "Unsupported MCP method" } };
 }

@@ -13,8 +13,8 @@ const EXIT_CODES: Record<string, number> = {
 const args = process.argv.slice(2);
 const [domain, action] = args;
 
-if (domain !== "message" && domain !== "thread") {
-  fail("usage_error", "Expected message or thread command");
+if (!["message", "thread", "channel", "search"].includes(domain ?? "")) {
+  fail("usage_error", "Expected message, thread, channel, or search command");
 }
 
 const flags = parseFlags(args.slice(2));
@@ -22,20 +22,40 @@ const token = await readBotToken();
 if (!token) fail("auth_error", "Bot token was not found in ~/mcp.json");
 
 const service = new MessagingService(new DiscordApiTransport(token));
-const content = flags.content;
-if (typeof content !== "string") fail("invalid_input", "--content is required");
 
 let result: Result<unknown>;
-if (domain === "message" && action === "send") {
-  result = await service.sendToChannel(required(flags, "channel-id"), content);
-} else if (domain === "message" && action === "reply") {
-  result = await service.replyToMessage(required(flags, "channel-id"), required(flags, "message-id"), content);
-} else if (domain === "thread" && action === "send") {
-  result = await service.sendToThread(required(flags, "thread-id"), content);
-} else if (domain === "thread" && action === "reply") {
-  result = await service.replyInThread(required(flags, "thread-id"), required(flags, "message-id"), content);
+if (domain === "message" && ["send", "reply"].includes(action ?? "")) {
+  const content = required(flags, "content");
+  if (action === "send") {
+    result = await service.sendToChannel(required(flags, "channel-id"), content);
+  } else {
+    result = await service.replyToMessage(required(flags, "channel-id"), required(flags, "message-id"), content);
+  }
+} else if (domain === "thread" && ["send", "reply"].includes(action ?? "")) {
+  const content = required(flags, "content");
+  if (action === "send") {
+    result = await service.sendToThread(required(flags, "thread-id"), content);
+  } else {
+    result = await service.replyInThread(required(flags, "thread-id"), required(flags, "message-id"), content);
+  }
+} else if (domain === "channel" && action === "messages") {
+  result = await service.listMessages(required(flags, "channel-id"), queryFlags(flags));
+} else if (domain === "thread" && action === "messages") {
+  result = await service.listMessages(required(flags, "thread-id"), queryFlags(flags));
+} else if (domain === "message" && action === "get") {
+  result = await service.getMessage(required(flags, "channel-id"), required(flags, "message-id"));
+} else if (domain === "search" && action === "messages") {
+  result = await service.searchMessages();
+} else if (domain === "thread" && action === "list-active") {
+  result = await service.listActiveThreads(required(flags, "channel-id"));
+} else if (domain === "thread" && action === "get") {
+  result = await service.getThread(required(flags, "thread-id"));
+} else if (domain === "thread" && action === "create-from-message") {
+  result = await service.createThreadFromMessage(required(flags, "channel-id"), required(flags, "message-id"), threadOptions(flags));
+} else if (domain === "thread" && action === "create") {
+  result = await service.createThread(required(flags, "channel-id"), threadOptions(flags));
 } else {
-  fail("usage_error", "Unsupported messaging command");
+  fail("usage_error", "Unsupported Discord command");
 }
 
 if (result.ok) {
@@ -62,6 +82,25 @@ function required(flags: Record<string, string>, name: string): string {
   const value = flags[name];
   if (!value) fail("invalid_input", `--${name} is required`);
   return value;
+}
+
+function queryFlags(flags: Record<string, string>) {
+  return {
+    ...(flags.limit ? { limit: flags.limit } : {}),
+    ...(flags.before ? { before: flags.before } : {}),
+    ...(flags.after ? { after: flags.after } : {}),
+    ...(flags.around ? { around: flags.around } : {}),
+  };
+}
+
+function threadOptions(flags: Record<string, string>) {
+  const name = required(flags, "name");
+  return {
+    name,
+    ...(flags["auto-archive-duration"] ? { auto_archive_duration: flags["auto-archive-duration"] } : {}),
+    ...(flags["rate-limit-per-user"] ? { rate_limit_per_user: flags["rate-limit-per-user"] } : {}),
+    ...(flags.invitable ? { invitable: flags.invitable } : {}),
+  };
 }
 
 function fail(code: string, message: string, details?: Record<string, unknown>): never {

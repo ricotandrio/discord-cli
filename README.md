@@ -12,17 +12,16 @@ service.
 | Messaging | Reply to a message | `message reply` | `message.reply` | Available |
 | Threads | Send a message to a thread | `thread send` | `thread.send` | Available |
 | Threads | Reply inside a thread | `thread reply` | `thread.reply` | Available |
-| Reading | Read recent messages from a channel | — | — | Specified |
-| Reading | Read messages from a thread | — | — | Specified |
-| Reading | Get a message by ID | — | — | Specified |
-| Search | Search messages in a guild or channel | — | — | Specified |
-| Threads | List active threads in a channel | — | — | Specified |
-| Threads | Get thread info | — | — | Specified |
-| Threads | Create a thread | — | — | Specified |
+| Reading | Read recent messages from a channel | `channel messages` | `channel.messages` | Available |
+| Reading | Read messages from a thread | `thread messages` | `thread.messages` | Available |
+| Reading | Get a message by ID | `message get` | `message.get` | Available |
+| Search | Search messages in a guild or channel | `search messages` | `search.messages` | Unsupported by Discord bot API |
+| Threads | List active threads in a channel | `thread list-active` | `thread.list-active` | Available |
+| Threads | Get thread info | `thread get` | `thread.get` | Available |
+| Threads | Create a thread | `thread create*` | `thread.create*` | Available |
 
-`Available` means implemented. `Specified` means defined in the
-[Discord core specification](docs/specs/discord-core/spec.md) but not yet
-implemented.
+`Available` means implemented. Search returns an explicit unsupported result
+because the Discord bot API does not provide a general message-search endpoint.
 
 See the [Discord core specification](docs/specs/discord-core/spec.md) and its
 [implementation plan](docs/specs/discord-core/plan.md).
@@ -92,6 +91,14 @@ Available commands:
 | `message reply` | `--channel-id`, `--message-id`, `--content` |
 | `thread send` | `--thread-id`, `--content` |
 | `thread reply` | `--thread-id`, `--message-id`, `--content` |
+| `channel messages` | `--channel-id` |
+| `thread messages` | `--thread-id` |
+| `message get` | `--channel-id`, `--message-id` |
+| `search messages` | search is explicitly unsupported |
+| `thread list-active` | `--channel-id` |
+| `thread get` | `--thread-id` |
+| `thread create` | `--channel-id`, `--name` |
+| `thread create-from-message` | `--channel-id`, `--message-id`, `--name` |
 
 Examples:
 
@@ -109,6 +116,11 @@ npm start -- thread reply \
   --thread-id THREAD_ID \
   --message-id MESSAGE_ID \
   --content "Thread reply"
+
+npm start -- channel messages --channel-id CHANNEL_ID --limit 20
+npm start -- message get --channel-id CHANNEL_ID --message-id MESSAGE_ID
+npm start -- thread list-active --channel-id CHANNEL_ID
+npm start -- thread create --channel-id CHANNEL_ID --name "Discussion"
 ```
 
 Discord IDs must be supplied explicitly as strings. Resources are not resolved
@@ -132,6 +144,14 @@ newline-delimited JSON results to stdout. Available methods are:
 | `message.reply` | Reply to a message |
 | `thread.send` | Send to a thread |
 | `thread.reply` | Reply inside a thread |
+| `channel.messages` | Read channel messages |
+| `thread.messages` | Read thread messages |
+| `message.get` | Get a message by ID |
+| `search.messages` | Return the documented unsupported-search result |
+| `thread.list-active` | List active threads |
+| `thread.get` | Get thread information |
+| `thread.create-from-message` | Create a thread from a message |
+| `thread.create` | Create a thread in a channel |
 
 Example request:
 
