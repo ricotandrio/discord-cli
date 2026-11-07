@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { readBotToken } from "./config.js";
+import { readBotToken, removeBotToken, saveBotToken } from "./config.js";
 import { DiscordApiTransport, MessagingService } from "./service.js";
 import type { Result } from "./types.js";
 
@@ -16,8 +16,13 @@ const EXIT_CODES: Record<string, number> = {
 const args = process.argv.slice(2);
 const [domain, action] = args;
 
+if (domain === "auth") {
+  await handleAuth(action);
+  process.exit(0);
+}
+
 if (!["message", "thread", "channel", "search"].includes(domain ?? "")) {
-  fail("usage_error", "Expected message, thread, channel, or search command");
+  fail("usage_error", "Expected auth, message, thread, channel, or search command");
 }
 
 const flags = parseFlags(args.slice(2));
@@ -33,7 +38,7 @@ if (dryRun) {
 }
 
 const token = await readBotToken();
-if (!token) fail("auth_error", "Bot token was not found in ~/mcp.json");
+if (!token) fail("auth_error", "Bot token was not found in ~/discord-cli.json");
 
 const service = new MessagingService(new DiscordApiTransport(token));
 
@@ -90,11 +95,85 @@ function parseFlags(values: string[]): Record<string, string> {
       parsed[name] = "true";
       continue;
     }
+
     if (!next || next.startsWith("--")) fail("usage_error", `Missing value for --${name}`);
     parsed[name] = next;
     index += 1;
   }
   return parsed;
+}
+
+async function handleAuth(action: string | undefined): Promise<void> {
+  if (action === "login") {
+    if (!process.stdin.isTTY) fail("usage_error", "auth login requires an interactive terminal");
+    let token: string;
+    try {
+      token = await promptHidden("Discord bot token: ");
+    } catch {
+      fail("invalid_input", "Credential entry was cancelled");
+    }
+    if (!token) fail("invalid_input", "A non-empty Discord bot token is required");
+    try {
+      await saveBotToken(token);
+    } catch {
+      fail("auth_error", "Could not save credentials to ~/discord-cli.json");
+    }
+    process.stdout.write(JSON.stringify({ ok: true, data: { authenticated: true }, next_cursor: null }) + "\n");
+    return;
+  }
+  if (action === "status") {
+    const token = await readBotToken();
+    process.stdout.write(
+      JSON.stringify({ ok: true, data: { authenticated: Boolean(token) }, next_cursor: null }) + "\n",
+    );
+    return;
+  }
+  if (action === "logout") {
+    try {
+      const removed = await removeBotToken();
+      process.stdout.write(
+        JSON.stringify({ ok: true, data: { authenticated: false, removed }, next_cursor: null }) + "\n",
+      );
+    } catch {
+      fail("auth_error", "Could not remove credentials from ~/discord-cli.json");
+    }
+    return;
+  }
+  fail("usage_error", "Expected auth login, auth status, or auth logout");
+}
+
+function promptHidden(prompt: string): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const input = process.stdin;
+    const output = process.stderr;
+    let value = "";
+    const onData = (chunk: string): void => {
+      for (const character of chunk) {
+        if (character === "\u0003") {
+          cleanup();
+          reject(new Error("prompt_cancelled"));
+        } else if (character === "\r" || character === "\n") {
+          cleanup();
+          output.write("\n");
+          resolve(value);
+        } else if (character === "\u007f" || character === "\b") {
+          value = value.slice(0, -1);
+        } else if (character >= " ") {
+          value += character;
+        }
+      }
+    };
+    const cleanup = (): void => {
+      input.off("data", onData);
+      input.setRawMode?.(false);
+      input.pause();
+    };
+    output.write(prompt);
+    input.setEncoding("utf8");
+    input.setRawMode?.(true);
+    input.resume();
+    input.on("data", onData);
+  });
 }
 
 function isWriteCommand(domain: string | undefined, action: string | undefined): boolean {

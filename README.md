@@ -32,29 +32,24 @@ See the [Discord core specification](docs/specs/discord-core/spec.md) and its
 
 This project does not support user tokens or self-bots.
 
-## Configuration
+## Authentication
 
-The token is read from `~/mcp.json`. The loader accepts a top-level
-`DISCORD_BOT_TOKEN` value or a `DISCORD_BOT_TOKEN` value inside an `env` object,
-including nested configuration:
-
-```json
-{
-  "discord": {
-    "env": {
-      "DISCORD_BOT_TOKEN": "your-bot-token"
-    }
-  }
-}
-```
-
-Protect this file:
+Log in interactively. The token prompt is hidden and the token is stored in
+`~/discord-cli.json` with owner-only permissions:
 
 ```sh
-chmod 600 ~/mcp.json
+discord-cli auth login
 ```
 
-Never pass the token as a command-line argument, commit it, or print it.
+Check or remove the stored credentials:
+
+```sh
+discord-cli auth status
+discord-cli auth logout
+```
+
+`auth status` never displays the token. Never pass the token as a command-line
+argument, commit it, or print it.
 
 ## Install
 
@@ -66,10 +61,18 @@ npm run build
 npm install --global .
 ```
 
+The build marks the generated entrypoint executable before installation.
+
 After installation, the command is available as `discord-cli`.
 
-The bot token is read from `~/mcp.json`; the installed command does not accept a
-token argument.
+The bot token is read from `~/discord-cli.json`; the installed command does not
+accept a token argument.
+
+Authenticate the CLI after installation:
+
+```sh
+discord-cli auth login
+```
 
 ## CLI usage
 
@@ -89,6 +92,9 @@ Available commands:
 
 | Command | Required flags |
 |---|---|
+| `auth login` | none; prompts for the hidden bot token |
+| `auth status` | none |
+| `auth logout` | none |
 | `message send` | `--channel-id`, `--content` |
 | `message reply` | `--channel-id`, `--message-id`, `--content` |
 | `thread send` | `--thread-id`, `--content` |

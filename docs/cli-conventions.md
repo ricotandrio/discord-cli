@@ -46,11 +46,10 @@ error-code vocabulary and whether transient API failures get a separate code are
 Discord supplies it; credentials and tokens must never appear in errors.
 
 ## Configuration and token handling
-The current implementation reads the bot token from `~/mcp.json`, accepting
-`DISCORD_BOT_TOKEN` at the top level or under a server entry's `env` object.
-The token is never accepted as a CLI argument, never logged, and never returned
-in CLI output. Whether environment-variable fallback should be supported
-is **(decision needed)**.
+The CLI stores the bot token in `~/discord-cli.json` after `auth login`, with
+owner-only permissions. `auth status` reports only whether credentials exist,
+and `auth logout` removes the file. The token is never accepted as a CLI
+argument, logged, or returned in CLI output.
 
 ## Streams and logging
 CLI stdout carries results only. Logs, diagnostics, progress, and warnings go to

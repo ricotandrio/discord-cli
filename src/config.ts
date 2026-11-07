@@ -1,8 +1,8 @@
-import { readFile } from "node:fs/promises";
+import { chmod, readFile, unlink, writeFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import { join } from "node:path";
 
-const CONFIG_PATH = join(homedir(), "mcp.json");
+export const CONFIG_PATH = join(homedir(), "discord-cli.json");
 
 export async function readBotToken(): Promise<string | undefined> {
   let contents: string;
@@ -19,6 +19,24 @@ export async function readBotToken(): Promise<string | undefined> {
     return undefined;
   }
   return findToken(config);
+}
+
+export async function saveBotToken(token: string): Promise<void> {
+  await writeFile(CONFIG_PATH, `${JSON.stringify({ DISCORD_BOT_TOKEN: token })}\n`, {
+    encoding: "utf8",
+    mode: 0o600,
+  });
+  await chmod(CONFIG_PATH, 0o600);
+}
+
+export async function removeBotToken(): Promise<boolean> {
+  try {
+    await unlink(CONFIG_PATH);
+    return true;
+  } catch (error) {
+    if (isNodeError(error) && error.code === "ENOENT") return false;
+    throw error;
+  }
 }
 
 function findToken(value: unknown): string | undefined {
@@ -40,4 +58,8 @@ function findToken(value: unknown): string | undefined {
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function isNodeError(value: unknown): value is NodeJS.ErrnoException {
+  return value instanceof Error && "code" in value;
 }

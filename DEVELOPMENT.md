@@ -39,6 +39,7 @@ npm start -- thread list-active --channel-id CHANNEL_ID
 
 ## Configuration
 
-Development uses the same bot-token configuration as the installed executable:
-`~/mcp.json`. Never put the token in source, shell history, command arguments,
+Development uses the same credential store as the installed executable:
+`~/discord-cli.json`. Run `npm start -- auth login` to store a token
+interactively. Never put the token in source, shell history, command arguments,
 logs, or test fixtures.
