@@ -10,8 +10,7 @@
     "build": "tsc",
     "typecheck": "tsc --noEmit",
     "test": "npm run build && node --test dist/test/**/*.test.js",
-    "start": "node dist/cli.js",
-    "mcp": "node dist/mcp.js"
+    "start": "node dist/cli.js"
   },
   "devDependencies": {
     "@types/node": "^22.20.5",

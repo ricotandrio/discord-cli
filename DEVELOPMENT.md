@@ -37,12 +37,6 @@ npm start -- channel messages --channel-id CHANNEL_ID --limit 20
 npm start -- thread list-active --channel-id CHANNEL_ID
 ```
 
-Run the local stdio server directly with:
-
-```sh
-npm start -- mcp
-```
-
 ## Configuration
 
 Development uses the same bot-token configuration as the installed executable:

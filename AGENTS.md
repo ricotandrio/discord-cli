@@ -1,10 +1,9 @@
 # AGENTS.md
 
-Guidelines for AI coding agents working in **discord-cli**: a command-line tool (and local MCP server) that exposes Discord capabilities to humans and AI agents. Discord has no official CLI. Bias toward caution over speed; for trivial tasks, use judgment.
+Guidelines for AI coding agents working in **discord-cli**: a command-line tool that exposes Discord capabilities to humans and AI agents. Discord has no official CLI. Bias toward caution over speed; for trivial tasks, use judgment.
 
 ## Project overview
 - CLI for Discord operations (messages, threads, reading, search) with structured output suitable for scripts and agents.
-- Also exposes the same capabilities as MCP tools over stdio.
 - Discord has no official CLI, so this project defines its own. Command naming, flags, output shape, and config conventions are documented in `docs/cli-conventions.md`; follow that file and propose changes to it rather than diverging silently.
 - Stack: TypeScript / Node.js
 
@@ -58,15 +57,10 @@ Non-trivial features follow: **spec → plan → implement → verify**.
 - Command structure `discord-cli <domain> <action> [flags]`, as defined in `docs/cli-conventions.md`.
 - Machine-readable output (JSON) by default or via `--json` / `--format`; human-friendly output must not change the JSON contract.
 - Stable exit codes: `0` success, non-zero for failures, documented per class (usage, auth, permission, not found, rate limited, API error).
-- **stdout is for results only.** Logs, progress, and warnings go to stderr. (For the MCP stdio server, stdout is reserved for protocol messages.)
+- **stdout is for results only.** Logs, progress, and warnings go to stderr.
 - Support pagination and limits with explicit flags (`--limit`, `--before`/`--after` or a cursor), with defaults and caps.
 - Destructive or write commands (send, reply, create thread, delete) should be clearly distinguished; consider `--dry-run` for writes.
-- Keep CLI commands and MCP tools thin wrappers over one shared service layer; no duplicated Discord logic.
-
-## MCP server
-- stdio transport only for now; strict JSON input schemas per tool (types, required fields, limits).
-- Tool names mirror CLI commands. Mark read-only vs write tools clearly so clients can require approval.
-- Return structured results and structured errors; never leak tokens or raw stack traces.
+- Keep CLI commands thin wrappers over one shared service layer; no duplicated Discord logic.
 
 ## Auth and config
 - Bot token from an environment variable or a config file with restricted permissions, as defined in `docs/cli-conventions.md`.
@@ -77,16 +71,15 @@ Non-trivial features follow: **spec → plan → implement → verify**.
 ## Testing
 - Unit tests with a mocked Discord client; no real network calls in default test runs.
 - CLI tests assert JSON output shape, exit codes, and stderr/stdout separation.
-- MCP tests run a client against the stdio server and check tool listing, schemas, and error cases.
 - Live integration tests (real bot, test guild) must be opt-in via an env flag and never run in CI by default.
 
 ## Code conventions
 - Strict TypeScript, typed interfaces for all API responses and command outputs.
-- Validate all input at boundaries (CLI flags, MCP arguments, API responses).
+- Validate all input at boundaries (CLI flags and API responses).
 - Follow existing patterns and folder structure; no new dependencies without asking.
 
 ## Security
-- Treat all external input (flags, MCP args, Discord content, attachments metadata) as untrusted.
+- Treat all external input (flags, Discord content, attachments metadata) as untrusted.
 - Never fetch or write files to arbitrary paths from message-supplied data (attachments, filenames).
 - Keep error messages free of secrets and internal details.
 

@@ -4,8 +4,8 @@ Status: Complete
 Spec: [spec.md](./spec.md)
 
 ## Problem and approach
-Implement the approved Discord core capabilities across CLI and MCP interfaces
-through one shared service layer. Search is represented by an explicit
+Implement the approved Discord core capabilities across CLI interfaces through
+one shared service layer. Search is represented by an explicit
 unsupported result because the Discord bot API does not provide a general
 message-search endpoint.
 
@@ -34,11 +34,11 @@ message-search endpoint.
   - **TASK-MSG-006:** Implement reply-inside-thread behavior with explicit
     `thread_id` and `message_id`.
 
-### Phase 3: Expose identical CLI and MCP interfaces
-- **TD-MSG-003 (FR-MSG-001..005, NFR-001, NFR-003..004):** Add thin CLI and
-  stdio MCP wrappers over the shared service.
+### Phase 3: Expose CLI interfaces
+- **TD-MSG-003 (FR-MSG-001..005, NFR-001, NFR-003..004):** Add thin CLI wrappers
+  over the shared service.
   - **TASK-MSG-007:** Add CLI message/thread send and reply commands.
-  - **TASK-MSG-008:** Add equivalent MCP methods and input handling.
+  - **TASK-MSG-008:** Add CLI argument handling.
   - **TASK-MSG-009:** Enforce JSON envelopes and stdout/stderr separation.
 
 ### Phase 4: Verify messaging behavior
@@ -46,7 +46,7 @@ message-search endpoint.
   Discord interactions and no default live network calls.
   - **TASK-MSG-010:** Test channel send, message reply, thread send, and thread reply.
   - **TASK-MSG-011:** Test validation, safe mentions, and the content limit.
-  - **TASK-MSG-012:** Run typecheck, tests, and CLI/MCP smoke checks.
+  - **TASK-MSG-012:** Run typecheck, tests, and CLI smoke checks.
 
 ### Phase 5: Implement reading, search behavior, and threads
 - **TD-CORE-005 (FR-READ-001..004, FR-SEARCH-001..003, FR-THREAD-001..005):**
@@ -55,7 +55,7 @@ message-search endpoint.
   - **TASK-CORE-013:** Add paginated channel/thread message reads and message lookup.
   - **TASK-CORE-014:** Add explicit unsupported search results.
   - **TASK-CORE-015:** Add active-thread listing, thread lookup, and thread creation.
-  - **TASK-CORE-016:** Expose all operations through CLI and MCP.
+  - **TASK-CORE-016:** Expose all operations through the CLI.
   - **TASK-CORE-017:** Add mocked tests for reads, search limitation, and threads.
 
 ## Verified Files and Symbols
@@ -65,9 +65,8 @@ message-search endpoint.
 | TASK-MSG-002 | `src/service.ts`, `src/types.ts` | Shared service and typed messaging models implement validation, safe mentions, and errors. |
 | TASK-MSG-003..006 | `src/service.ts` | Shared service implements channel send, message reply, thread send, and thread reply. |
 | TASK-MSG-007 | `src/cli.ts` | CLI dispatches the four provisional messaging commands. |
-| TASK-MSG-008 | `src/mcp.ts` | MCP stdio handler exposes equivalent messaging methods. |
 | TASK-MSG-010..012 | `src/test/service.test.ts`, `package.json` | Focused tests and verified npm scripts exist. |
-| TASK-CORE-013..017 | `src/service.ts`, `src/cli.ts`, `src/mcp.ts`, `src/test/service.test.ts` | Shared REST service, CLI/MCP dispatch, and mocked tests implement the remaining core operations. |
+| TASK-CORE-013..017 | `src/service.ts`, `src/cli.ts`, `src/test/service.test.ts` | Shared REST service, CLI dispatch, and mocked tests implement the remaining core operations. |
 
 ## Requirement Traceability
 | Requirement ID | Design task IDs | Implementation task IDs | Acceptance criteria |
@@ -92,7 +91,7 @@ message-search endpoint.
 | TASK-MSG-005 | [x] Complete | Thread send added. |
 | TASK-MSG-006 | [x] Complete | Thread reply added with explicit message reference. |
 | TASK-MSG-007 | [x] Complete | CLI commands added. |
-| TASK-MSG-008 | [x] Complete | Equivalent line-delimited MCP methods added. |
+| TASK-MSG-008 | [x] Complete | CLI argument handling added. |
 | TASK-MSG-009 | [x] Complete | JSON envelopes and output stream rules implemented. |
 | TASK-MSG-010 | [x] Complete | Focused mocked messaging tests added. |
 | TASK-MSG-011 | [x] Complete | Validation, safe mentions, and 2,000-character limit covered. |
@@ -100,19 +99,19 @@ message-search endpoint.
 | TASK-CORE-013 | [x] Complete | Added paginated channel/thread reads and message lookup. |
 | TASK-CORE-014 | [x] Complete | Added explicit unsupported bot-search result. |
 | TASK-CORE-015 | [x] Complete | Added active threads, thread info, and thread creation. |
-| TASK-CORE-016 | [x] Complete | Added CLI and MCP exposure for all core operations. |
+| TASK-CORE-016 | [x] Complete | Added CLI exposure for all core operations. |
 | TASK-CORE-017 | [x] Complete | Added mocked tests for reads, search, and thread creation. |
 
 ## Testing and Verification
 - `npm run typecheck` passes.
 - `npm test` passes three focused mocked messaging tests.
 - `npm test` covers messaging, reads, unsupported search, and thread creation.
-- MCP tool-list smoke test passes.
+- CLI smoke checks pass.
 - CLI missing-token smoke test returns the documented authentication error.
 - No lint command is configured yet.
 - Live Discord integration tests remain opt-in.
 
 ## Deviations
 - Search is explicitly unsupported because the Discord bot API does not provide
-  a general message-search endpoint; the CLI and MCP return a structured
+  a general message-search endpoint; the CLI returns a structured
   `unsupported` result rather than fabricating matches.

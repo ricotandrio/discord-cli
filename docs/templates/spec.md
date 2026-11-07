@@ -16,17 +16,17 @@ Status: Draft
 - **NFR-001:** <requirement>
 
 ## Interfaces
-| Requirement ID | CLI command | MCP tool | Read/write | Inputs | Output |
+| Requirement ID | CLI command | Read/write | Inputs | Output |
 |---|---|---|---|---|---|
-| FR-001 | <command> | <tool> | <read/write> | <inputs> | <output> |
+| FR-001 | <command> | <read/write> | <inputs> | <output> |
 
 ## Security Requirements
 - **SR-001:** <security requirement>
 
 ## Error Handling
-| Condition | CLI behavior | MCP behavior |
+| Condition | CLI behavior |
 |---|---|---|
-| <condition> | <exit code and JSON error> | <structured error> |
+| <condition> | <exit code and JSON error> |
 
 ## Acceptance Criteria
 - **AC-001 (FR-001):** Given <context>, when <action>, then <observable result>.
