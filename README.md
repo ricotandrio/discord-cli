@@ -6,7 +6,7 @@ API. You are responsible for complying with Discord's
 [Terms of Service](https://discord.com/terms) and
 [Developer Policy](https://support-dev.discord.com/hc/en-us/articles/8563934450327-Discord-Developer-Policy).
 
-[Install](#install) · [Authentication](#authentication) · [Commands](#cli-usage) · [Agent Skills](#agent-skills) · [Output](#output-and-errors) · [Safety](#safety) · [Development](#development) · [Issues](#issues) · [Contributing](#contributing) · [Disclaimer](#disclaimer) · [License](#license)
+[Install](#install) · [Commands](#cli-usage) · [Agent Skills](#agent-skills) · [Output](#output-and-errors) · [Safety](#safety) · [Development](#development) · [Issues](#issues) · [Contributing](#contributing) · [Disclaimer](#disclaimer) · [License](#license)
 
 ## Current status
 
