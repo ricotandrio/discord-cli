@@ -1,7 +1,10 @@
 # discord-cli
 
-`discord-cli` is unofficially developed as a TypeScript command-line tool for Discord bot operations. This tool is intended for use with bot tokens through Discord's official API. You are responsible for complying with Discord's [Terms of Service](https://discord.com/terms) and [Developer Policy](https://support-dev.discord.com/hc/en-us/articles/8563934450327-Discord-Developer-Policy).
-
+`discord-cli` is an unofficial TypeScript command-line tool for Discord bot
+operations. It is designed for use with bot tokens through Discord's official
+API. You are responsible for complying with Discord's
+[Terms of Service](https://discord.com/terms) and
+[Developer Policy](https://support-dev.discord.com/hc/en-us/articles/8563934450327-Discord-Developer-Policy).
 
 [Install](#install) · [Authentication](#authentication) · [Commands](#cli-usage) · [Agent Skills](#agent-skills) · [Output](#output-and-errors) · [Safety](#safety) · [Development](#development) · [Issues](#issues) · [Contributing](#contributing) · [Disclaimer](#disclaimer) · [License](#license)
 
