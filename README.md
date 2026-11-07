@@ -1,6 +1,9 @@
 # discord-cli
 
-`discord-cli` is a TypeScript command-line tool for Discord bot operations.
+`discord-cli` is a TypeScript command-line tool for Discord bot operations. This tool is intended for use with bot tokens through Discord's official API. You are responsible for complying with Discord's [Terms of Service](https://discord.com/terms) and [Developer Policy](https://support-dev.discord.com/hc/en-us/articles/8563934450327-Discord-Developer-Policy).
+
+
+[Install](#install) · [Authentication](#authentication) · [Commands](#cli-usage) · [Output](#output-and-errors) · [Safety](#safety) · [Disclaimer](#disclaimer) · [License](#license) · [Development](#development)
 
 ## Current status
 
@@ -101,7 +104,7 @@ discord-cli auth logout
    `git --version`. If any is missing, tell the user and stop.
 2. **Clone and install:**
    ```sh
-   git clone https://github.com/ricotandrio/discord-cli
+   git clone https://github.com/ricotandrio/discord-cli.git
    cd discord-cli
    npm run setup
    ```
@@ -248,6 +251,24 @@ Discord returns them. It does not retry in a tight loop.
 
 See [CLI conventions](docs/cli-conventions.md) for the full output,
 configuration, and stream contract.
+
+## Disclaimer
+
+Use this tool only with a bot account and in accordance with
+[Discord's Terms of Service](https://discord.com/terms), Developer Policy, and
+all applicable laws. You are responsible for your bot, its permissions, the
+messages it sends, and the data it reads or stores. This project does not
+guarantee uninterrupted availability or compatibility with future Discord API
+changes, and it provides no warranty for data loss, rate limits, permission
+issues, or service interruptions.
+
+Do not use user tokens or self-bots. Never share your bot token. Review
+`--dry-run` output before write operations and grant the bot only the
+permissions it needs.
+
+## License
+
+This project is licensed under the [MIT License](LICENSE).
 
 ## Development
 
