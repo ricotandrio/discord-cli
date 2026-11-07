@@ -10,6 +10,7 @@
     "build": "tsc && chmod 755 dist/cli.js",
     "typecheck": "tsc --noEmit",
     "test": "npm run build && node --test dist/test/**/*.test.js",
+    "setup": "npm ci && npm run build && npm install --global .",
     "start": "node dist/cli.js"
   },
   "devDependencies": {

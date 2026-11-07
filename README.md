@@ -48,7 +48,9 @@ discord-cli auth status
 discord-cli auth logout
 ```
 
-`auth status` never displays the token. Never pass the token as a command-line
+`auth login` checks the token with Discord before saving it. `auth status`
+reports both whether a token is configured and whether Discord currently
+accepts it; it never displays the token. Never pass the token as a command-line
 argument, commit it, or print it.
 
 ## Install
@@ -62,6 +64,12 @@ npm install --global .
 ```
 
 The build marks the generated entrypoint executable before installation.
+
+You can run all three setup steps with:
+
+```sh
+npm run setup
+```
 
 After installation, the command is available as `discord-cli`.
 

@@ -9,6 +9,12 @@ the production `discord-cli` executable, see [README.md](README.md).
 npm ci
 ```
 
+For a complete global setup from the repository, run:
+
+```sh
+npm run setup
+```
+
 ## Build and validate
 
 ```sh

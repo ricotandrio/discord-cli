@@ -48,8 +48,9 @@ Discord supplies it; credentials and tokens must never appear in errors.
 ## Configuration and token handling
 The CLI stores the bot token in `~/discord-cli.json` after `auth login`, with
 owner-only permissions. `auth status` reports only whether credentials exist,
-and `auth logout` removes the file. The token is never accepted as a CLI
-argument, logged, or returned in CLI output.
+and whether Discord accepts the stored token. `auth login` validates the token
+against Discord before saving it, and `auth logout` removes the file. The token
+is never accepted as a CLI argument, logged, or returned in CLI output.
 
 ## Streams and logging
 CLI stdout carries results only. Logs, diagnostics, progress, and warnings go to

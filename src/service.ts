@@ -51,6 +51,15 @@ export class DiscordApiTransport implements DiscordTransport {
   }
 }
 
+export async function checkBotToken(token: string): Promise<Result<true>> {
+  try {
+    await new DiscordApiTransport(token).request("/users/@me", { method: "GET" });
+    return { ok: true, data: true, next_cursor: null };
+  } catch (error) {
+    return { ok: false, error: normalizeError(error) };
+  }
+}
+
 export class MessagingService {
   public constructor(private readonly transport: DiscordTransport) {}
 

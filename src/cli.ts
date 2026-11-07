@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import { readBotToken, removeBotToken, saveBotToken } from "./config.js";
-import { DiscordApiTransport, MessagingService } from "./service.js";
+import { checkBotToken, DiscordApiTransport, MessagingService } from "./service.js";
 import type { Result } from "./types.js";
 
 const EXIT_CODES: Record<string, number> = {
@@ -113,6 +113,10 @@ async function handleAuth(action: string | undefined): Promise<void> {
       fail("invalid_input", "Credential entry was cancelled");
     }
     if (!token) fail("invalid_input", "A non-empty Discord bot token is required");
+    const health = await checkBotToken(token);
+    if (!health.ok) {
+      fail("auth_error", "Discord rejected the bot token");
+    }
     try {
       await saveBotToken(token);
     } catch {
@@ -123,8 +127,17 @@ async function handleAuth(action: string | undefined): Promise<void> {
   }
   if (action === "status") {
     const token = await readBotToken();
+    const health = token ? await checkBotToken(token) : undefined;
     process.stdout.write(
-      JSON.stringify({ ok: true, data: { authenticated: Boolean(token) }, next_cursor: null }) + "\n",
+      JSON.stringify({
+        ok: true,
+        data: {
+          authenticated: Boolean(token),
+          healthy: health?.ok ?? false,
+          ...(health && !health.ok ? { error_code: health.error.code } : {}),
+        },
+        next_cursor: null,
+      }) + "\n",
     );
     return;
   }
