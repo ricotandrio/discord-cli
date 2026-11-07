@@ -51,10 +51,10 @@ error-code vocabulary and whether transient API failures get a separate code are
 Discord supplies it; credentials and tokens must never appear in errors.
 
 ## Configuration and token handling
-The bot token is read from `DISCORD_BOT_TOKEN` or a restricted-permission config
-file. The config-file path, precedence, and permission policy are **(decision
-needed)**. A token is never accepted as a CLI argument, never logged, and never
-returned in CLI or MCP output.
+The current implementation reads the bot token from `DISCORD_BOT_TOKEN`. A
+restricted-permission config file remains **(decision needed)**, including its
+path, precedence, and permission policy. A token is never accepted as a CLI
+argument, never logged, and never returned in CLI or MCP output.
 
 ## Streams and logging
 CLI stdout carries results only. Logs, diagnostics, progress, and warnings go to

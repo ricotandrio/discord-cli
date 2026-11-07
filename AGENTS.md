@@ -15,7 +15,10 @@ Guidelines for AI coding agents working in **discord-cli**: a command-line tool 
 - If something is unclear, stop, name what is confusing, and ask.
 
 ## Commands
-- TBD: no package manifest or verified build, lint, typecheck, or test commands exist yet.
+- `npm run build` — compile TypeScript to `dist/`.
+- `npm run typecheck` — run TypeScript checks without emitting files.
+- `npm test` — build and run the default mocked Node test suite.
+- No lint command is configured yet.
 
 ## 2. Simplicity first
 - Minimum code that solves the problem. No speculative features, flags, or abstractions.
