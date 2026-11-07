@@ -5,6 +5,7 @@ import { DiscordApiTransport, MessagingService } from "./service.js";
 import type { Result } from "./types.js";
 
 const EXIT_CODES: Record<string, number> = {
+  usage_error: 2,
   invalid_input: 2,
   auth_error: 3,
   permission_error: 4,
@@ -20,6 +21,17 @@ if (!["message", "thread", "channel", "search"].includes(domain ?? "")) {
 }
 
 const flags = parseFlags(args.slice(2));
+const dryRun = flags["dry-run"] === "true";
+if (dryRun && !isWriteCommand(domain, action)) {
+  fail("usage_error", "--dry-run is only supported for write commands");
+}
+
+if (dryRun) {
+  const preview = previewWrite(domain, action, flags);
+  process.stdout.write(`${JSON.stringify({ ok: true, data: preview, next_cursor: null })}\n`);
+  process.exit(0);
+}
+
 const token = await readBotToken();
 if (!token) fail("auth_error", "Bot token was not found in ~/mcp.json");
 
@@ -68,16 +80,100 @@ if (result.ok) {
 
 function parseFlags(values: string[]): Record<string, string> {
   const parsed: Record<string, string> = {};
+  const booleanFlags = new Set(["dry-run"]);
   for (let index = 0; index < values.length; index += 1) {
     const value = values[index];
     if (!value.startsWith("--")) fail("usage_error", `Invalid flag: ${value}`);
     const name = value.slice(2);
     const next = values[index + 1];
+    if (booleanFlags.has(name) && (!next || next.startsWith("--"))) {
+      parsed[name] = "true";
+      continue;
+    }
     if (!next || next.startsWith("--")) fail("usage_error", `Missing value for --${name}`);
     parsed[name] = next;
     index += 1;
   }
   return parsed;
+}
+
+function isWriteCommand(domain: string | undefined, action: string | undefined): boolean {
+  return (
+    (domain === "message" && ["send", "reply"].includes(action ?? "")) ||
+    (domain === "thread" && ["send", "reply", "create", "create-from-message"].includes(action ?? ""))
+  );
+}
+
+function previewWrite(
+  domain: string | undefined,
+  action: string | undefined,
+  flags: Record<string, string>,
+): Record<string, unknown> {
+  if (domain === "message" && action === "send") {
+    const channelId = required(flags, "channel-id");
+    return {
+      dry_run: true,
+      method: "POST",
+      path: `/channels/${channelId}/messages`,
+      body: messageBody(required(flags, "content")),
+    };
+  }
+  if (domain === "message" && action === "reply") {
+    const channelId = required(flags, "channel-id");
+    return {
+      dry_run: true,
+      method: "POST",
+      path: `/channels/${channelId}/messages`,
+      body: messageBody(required(flags, "content"), channelId, required(flags, "message-id")),
+    };
+  }
+  if (domain === "thread" && action === "send") {
+    const threadId = required(flags, "thread-id");
+    return {
+      dry_run: true,
+      method: "POST",
+      path: `/channels/${threadId}/messages`,
+      body: messageBody(required(flags, "content")),
+    };
+  }
+  if (domain === "thread" && action === "reply") {
+    const threadId = required(flags, "thread-id");
+    return {
+      dry_run: true,
+      method: "POST",
+      path: `/channels/${threadId}/messages`,
+      body: messageBody(required(flags, "content"), threadId, required(flags, "message-id")),
+    };
+  }
+  if (domain === "thread" && action === "create-from-message") {
+    const channelId = required(flags, "channel-id");
+    return {
+      dry_run: true,
+      method: "POST",
+      path: `/channels/${channelId}/messages/${required(flags, "message-id")}/threads`,
+      body: threadOptions(flags),
+    };
+  }
+  if (domain === "thread" && action === "create") {
+    const channelId = required(flags, "channel-id");
+    return {
+      dry_run: true,
+      method: "POST",
+      path: `/channels/${channelId}/threads`,
+      body: { type: 11, ...threadOptions(flags) },
+    };
+  }
+  fail("usage_error", "Unsupported write command");
+}
+
+function messageBody(content: string, channelId?: string, messageId?: string): Record<string, unknown> {
+  return {
+    content,
+    allowed_mentions: { parse: [] },
+    ...(channelId && messageId
+      ? { message_reference: { message_id: messageId, channel_id: channelId } }
+      : {}),
+  };
 }
 
 function required(flags: Record<string, string>, name: string): string {

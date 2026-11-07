@@ -5,8 +5,9 @@ CLI commands use `discord-cli <domain> <action> [flags]`. The initial domains ar
 `message`, `thread`, `channel`, and `search`; adding domains is **(decision needed)**.
 
 Write operations (send, reply, and create-thread actions) must be visibly distinct
-from read-only operations. Whether a separate `--dry-run` mode is required is
-**(decision needed)**.
+from read-only operations. Write commands support `--dry-run`, which validates
+the inputs and returns the planned `POST` path and JSON body without reading the
+token or making a Discord request. `--dry-run` is invalid on read-only commands.
 
 ## Identifiers and input
 All Discord identifiers are strings and are passed explicitly:

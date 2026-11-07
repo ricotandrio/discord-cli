@@ -178,5 +178,6 @@ Exact command names, required guild identifiers, and payload flags are
 - **OQ-008:** Which of Discord's optional attachment fields (`description`, `content_type`, dimensions, voice metadata, and flags) are guaranteed in the public output contract?
 - **OQ-009:** Should over-length message content be rejected, split, or require an explicit opt-in behavior?
 - **OQ-010:** Which thread types are supported for creation, and should archived-thread listing remain out of scope?
-- **OQ-011:** Do write commands require a `--dry-run` option?
+- **OQ-011:** Resolved: write commands support `--dry-run`; it validates inputs
+  and returns the planned request without contacting Discord.
 - **OQ-012:** Which live integration-test environment, if any, may be used for opt-in tests?

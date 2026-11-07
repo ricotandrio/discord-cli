@@ -71,7 +71,7 @@ After installation, the command is available as `discord-cli`.
 The bot token is read from `~/mcp.json`; the installed command does not accept a
 token argument.
 
-## Production CLI usage
+## CLI usage
 
 The command structure is:
 
@@ -124,6 +124,22 @@ discord-cli message get --channel-id CHANNEL_ID --message-id MESSAGE_ID
 discord-cli thread list-active --channel-id CHANNEL_ID
 discord-cli thread create --channel-id CHANNEL_ID --name "Discussion"
 ```
+
+Add `--dry-run` to any write command to validate the inputs and preview the
+Discord request without sending it:
+
+```sh
+discord-cli message send \
+  --channel-id CHANNEL_ID \
+  --content "Hello" \
+  --dry-run
+```
+
+The preview is returned in the normal JSON envelope and includes `dry_run`,
+the HTTP method, the API path, and the request body. It does not load the bot
+token or make a network request. `--dry-run` is available for `message send`,
+`message reply`, `thread send`, `thread reply`, `thread create`, and
+`thread create-from-message`.
 
 Discord IDs must be supplied explicitly as strings. Resources are not resolved
 by name.
@@ -182,4 +198,4 @@ configuration, and stream contract.
 ## Development
 
 Repository-only commands, including `npm start -- ...`, are documented in
-[DEVELOPMENT.md](DEVELOPMENT.md). The production executable is `discord-cli`.
+[DEVELOPMENT.md](DEVELOPMENT.md). The final executable is `discord-cli`.
