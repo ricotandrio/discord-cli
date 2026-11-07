@@ -60,14 +60,22 @@ chmod 600 ~/mcp.json
 
 Never pass the token as a command-line argument, commit it, or print it.
 
-## Install and build
+## Install
+
+Build and install the executable globally:
 
 ```sh
 npm ci
 npm run build
+npm install --global .
 ```
 
-## CLI usage
+After installation, the command is available as `discord-cli`.
+
+The bot token is read from `~/mcp.json`; the installed command does not accept a
+token argument.
+
+## Production CLI usage
 
 The command structure is:
 
@@ -75,10 +83,8 @@ The command structure is:
 discord-cli <domain> <action> [flags]
 ```
 
-During development, invoke the CLI through npm:
-
 ```sh
-npm start -- message send \
+discord-cli message send \
   --channel-id CHANNEL_ID \
   --content "Hello"
 ```
@@ -103,24 +109,24 @@ Available commands:
 Examples:
 
 ```sh
-npm start -- message reply \
+discord-cli message reply \
   --channel-id CHANNEL_ID \
   --message-id MESSAGE_ID \
   --content "Reply"
 
-npm start -- thread send \
+discord-cli thread send \
   --thread-id THREAD_ID \
   --content "Hello thread"
 
-npm start -- thread reply \
+discord-cli thread reply \
   --thread-id THREAD_ID \
   --message-id MESSAGE_ID \
   --content "Thread reply"
 
-npm start -- channel messages --channel-id CHANNEL_ID --limit 20
-npm start -- message get --channel-id CHANNEL_ID --message-id MESSAGE_ID
-npm start -- thread list-active --channel-id CHANNEL_ID
-npm start -- thread create --channel-id CHANNEL_ID --name "Discussion"
+discord-cli channel messages --channel-id CHANNEL_ID --limit 20
+discord-cli message get --channel-id CHANNEL_ID --message-id MESSAGE_ID
+discord-cli thread list-active --channel-id CHANNEL_ID
+discord-cli thread create --channel-id CHANNEL_ID --name "Discussion"
 ```
 
 Discord IDs must be supplied explicitly as strings. Resources are not resolved
@@ -131,7 +137,7 @@ by name.
 Start the local server with:
 
 ```sh
-npm run mcp
+discord-cli mcp
 ```
 
 The current server reads newline-delimited JSON requests from stdin and writes
@@ -153,7 +159,8 @@ newline-delimited JSON results to stdout. Available methods are:
 | `thread.create-from-message` | Create a thread from a message |
 | `thread.create` | Create a thread in a channel |
 
-Example request:
+For development, run the server with `npm start -- mcp`; see
+[DEVELOPMENT.md](DEVELOPMENT.md). Example request:
 
 ```json
 {"method":"message.send","params":{"channel_id":"CHANNEL_ID","content":"Hello"}}
@@ -215,17 +222,5 @@ configuration, and stream contract.
 
 ## Development
 
-Run typechecking:
-
-```sh
-npm run typecheck
-```
-
-Run the default mocked test suite:
-
-```sh
-npm test
-```
-
-The test suite does not make live Discord requests. No lint command is
-configured yet.
+Repository-only commands, including `npm start -- ...`, are documented in
+[DEVELOPMENT.md](DEVELOPMENT.md). The production executable is `discord-cli`.

@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 import { readBotToken } from "./config.js";
 import { DiscordApiTransport, MessagingService } from "./service.js";
 import type { Result } from "./types.js";
@@ -12,6 +14,11 @@ const EXIT_CODES: Record<string, number> = {
 
 const args = process.argv.slice(2);
 const [domain, action] = args;
+
+if (domain === "mcp") {
+  await import("./mcp.js");
+  process.exit(0);
+}
 
 if (!["message", "thread", "channel", "search"].includes(domain ?? "")) {
   fail("usage_error", "Expected message, thread, channel, or search command");
