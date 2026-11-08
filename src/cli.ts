@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+import { readFile } from "node:fs/promises";
 import { readBotToken, removeBotToken, saveBotToken } from "./config.js";
 import { checkBotToken, DiscordApiTransport, MessagingService } from "./service.js";
 import type { Result } from "./types.js";
@@ -14,6 +15,17 @@ const EXIT_CODES: Record<string, number> = {
 };
 
 const args = process.argv.slice(2);
+
+if (args.includes("--version") || args.includes("-v") || args[0] === "version") {
+  const version = await readVersion();
+  if (args.includes("--json") || (args.includes("--format") && args[args.indexOf("--format") + 1] === "json")) {
+    process.stdout.write(`${JSON.stringify({ ok: true, data: { version }, next_cursor: null })}\n`);
+  } else {
+    process.stdout.write(`${version}\n`);
+  }
+  process.exit(0);
+}
+
 const [domain, action] = args;
 
 if (domain === "auth") {
@@ -296,4 +308,14 @@ function threadOptions(flags: Record<string, string>) {
 function fail(code: string, message: string, details?: Record<string, unknown>): never {
   process.stdout.write(`${JSON.stringify({ ok: false, error: { code, message, ...(details ? { details } : {}) } })}\n`);
   process.exit(EXIT_CODES[code] ?? 1);
+}
+
+async function readVersion(): Promise<string> {
+  try {
+    const pkgUrl = new URL("../package.json", import.meta.url);
+    const pkg = JSON.parse(await readFile(pkgUrl, "utf8")) as { version?: unknown };
+    return typeof pkg.version === "string" ? pkg.version : "0.0.0";
+  } catch {
+    return "0.0.0";
+  }
 }

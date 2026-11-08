@@ -2,7 +2,8 @@ import { chmod, readFile, unlink, writeFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import { join } from "node:path";
 
-export const CONFIG_PATH = join(homedir(), "discord-cli.json");
+export const CONFIG_FILENAME = "discord-cli.json";
+export const CONFIG_PATH = join(homedir(), CONFIG_FILENAME);
 
 export async function readBotToken(): Promise<string | undefined> {
   let contents: string;
