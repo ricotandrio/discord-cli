@@ -1,3 +1,4 @@
+import { HttpMethod } from "./map.js";
 import type {
   ApiError,
   DiscordChannel,
@@ -7,8 +8,7 @@ import type {
   Result,
   ThreadCreateOptions,
 } from "./types.js";
-
-const API_BASE = "https://discord.com/api/v10";
+import { API_BASE } from "./constants.js";
 
 export interface DiscordTransport {
   request<T>(path: string, init: RequestInit): Promise<T>;
@@ -38,9 +38,14 @@ export class DiscordApiTransport implements DiscordTransport {
     }
     const retryAfter = response.headers.get("retry-after");
     const details: Record<string, unknown> = {};
-    if (retryAfter !== null) details.retry_after = retryAfter;
+    if (retryAfter !== null) {
+      details.retry_after = retryAfter;
+    } else if (typeof body.retry_after === "number" || typeof body.retry_after === "string") {
+      details.retry_after = body.retry_after;
+    }
     const scope = response.headers.get("x-ratelimit-scope");
     if (scope !== null) details.scope = scope;
+    if (typeof body.global === "boolean") details.global = body.global;
     const error: ApiError = {
       status: response.status,
       code: response.status === 429 ? "rate_limited" : "discord_api_error",
@@ -142,7 +147,7 @@ export class MessagingService {
     messageId: string,
     options: ThreadCreateOptions,
   ): Promise<Result<DiscordChannel>> {
-    if (!isId(channelId) || !isId(messageId) || !options.name) {
+    if (!isId(channelId) || !isId(messageId) || !threadOptionsAreValid(options)) {
       return { ok: false, error: { status: 0, code: "invalid_input", message: "channel_id, message_id, and name are required" } };
     }
     return this.post<DiscordChannel>(
@@ -155,7 +160,7 @@ export class MessagingService {
     channelId: string,
     options: ThreadCreateOptions,
   ): Promise<Result<DiscordChannel>> {
-    if (!isId(channelId) || !options.name) {
+    if (!isId(channelId) || !threadOptionsAreValid(options)) {
       return { ok: false, error: { status: 0, code: "invalid_input", message: "channel_id and name are required" } };
     }
     return this.post<DiscordChannel>(`/channels/${channelId}/threads`, {
@@ -172,7 +177,7 @@ export class MessagingService {
       };
     }
     try {
-      return this.post<DiscordMessage>(`/channels/${channelId}/messages`, payload);
+      return await this.post<DiscordMessage>(`/channels/${channelId}/messages`, payload);
     } catch (error) {
       return { ok: false, error: normalizeError(error) };
     }
@@ -190,7 +195,7 @@ export class MessagingService {
   private async post<T>(path: string, body: unknown): Promise<Result<T>> {
     try {
       const data = await this.transport.request<T>(path, {
-        method: "POST",
+        method: HttpMethod.Post,
         body: JSON.stringify(body),
       });
       return { ok: true, data, next_cursor: null };
@@ -222,12 +227,29 @@ export class MessagingService {
   }
 }
 
-function contentIsValid(content: string): boolean {
+export function contentIsValid(content: string): boolean {
   return content.length > 0 && content.length <= 2000;
 }
 
-function isId(value: string): boolean {
-  return value.trim().length > 0;
+export function isId(value: string): boolean {
+  return /^\d+$/.test(value);
+}
+
+export function threadOptionsAreValid(options: ThreadCreateOptions): boolean {
+  if (!options.name || options.name.length > 100) return false;
+  if (
+    options.auto_archive_duration !== undefined &&
+    !["60", "1440", "4320", "10080"].includes(options.auto_archive_duration)
+  ) {
+    return false;
+  }
+  if (
+    options.rate_limit_per_user !== undefined &&
+    !/^(?:0|[1-9]\d{0,3}|1\d{4}|2[0-1]\d{3}|21600)$/.test(options.rate_limit_per_user)
+  ) {
+    return false;
+  }
+  return options.invitable === undefined || options.invitable === "true" || options.invitable === "false";
 }
 
 function threadOptions(options: ThreadCreateOptions): Record<string, unknown> {

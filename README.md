@@ -61,25 +61,39 @@ again.
 
 > **If you are an AI agent, jump to [Install (AI Agent)](#install-ai-agent) and follow those steps.**
 
+### Option 1: Install from GitHub Release (Recommended)
+
+```sh
+npm install --global https://github.com/ricotandrio/discord-cli/releases/latest/download/discord-cli.tgz
+```
+
+Or run once without installing:
+
+```sh
+npx https://github.com/ricotandrio/discord-cli/releases/latest/download/discord-cli.tgz auth status
+```
+
+Pin a specific version:
+
+```sh
+npm install --global https://github.com/ricotandrio/discord-cli/releases/download/v0.0.1/discord-cli-0.0.1.tgz
+```
+
+### Option 2: Install from Source
+
 Clone the repository, then build and install the executable globally:
 
 ```sh
 git clone https://github.com/ricotandrio/discord-cli.git
 cd discord-cli
-npm ci
-npm run build
-npm install --global .
-```
-
-The build marks the generated entrypoint executable before installation.
-
-You can run the three setup steps (`npm ci`, build, global install) with:
-
-```sh
 npm run setup
 ```
 
-After installation, the command is available as `discord-cli`.
+After installation, the command is available as `discord-cli`. Verify the installation:
+
+```sh
+discord-cli --version
+```
 
 The bot token is read from `~/discord-cli.json`; the installed command does not
 accept a token argument.
@@ -97,6 +111,15 @@ discord-cli auth status
 discord-cli auth logout
 ```
 
+### Troubleshooting installation
+
+If you previously installed `discord-cli` and later moved or renamed the repository directory, the global symlink or binary link may break. Clean up the old link and reinstall:
+
+```sh
+npm uninstall --global discord-cli
+npm run setup
+```
+
 
 ### Install (AI Agent)
 
@@ -111,7 +134,7 @@ discord-cli auth logout
    cd discord-cli
    npm run setup
    ```
-3. **Verify the executable:** run `discord-cli auth status`.
+3. **Verify the executable:** run `discord-cli --version` and `discord-cli auth status`.
 4. **Install the agent skills** from the repository's `skills/` folder using your
    tool's skill mechanism, then read `discord-shared` before running any
    other command.
@@ -149,6 +172,7 @@ Available commands:
 
 | Command | Required flags |
 |---|---|
+| `--version` | none (optional `--json`) |
 | `auth login` | none; prompts for the hidden bot token |
 | `auth status` | none |
 | `auth logout` | none |

@@ -2,8 +2,16 @@
 
 import { readFile } from "node:fs/promises";
 import { readBotToken, removeBotToken, saveBotToken } from "./config.js";
-import { checkBotToken, DiscordApiTransport, MessagingService } from "./service.js";
+import {
+  checkBotToken,
+  contentIsValid,
+  DiscordApiTransport,
+  isId,
+  MessagingService,
+  threadOptionsAreValid,
+} from "./service.js";
 import type { Result } from "./types.js";
+import { DomainArgs, HttpMethod } from "./map.js";
 
 const EXIT_CODES: Record<string, number> = {
   usage_error: 2,
@@ -28,12 +36,12 @@ if (args.includes("--version") || args.includes("-v") || args[0] === "version") 
 
 const [domain, action] = args;
 
-if (domain === "auth") {
+if (domain === DomainArgs.Auth) {
   await handleAuth(action);
   process.exit(0);
 }
 
-if (!["message", "thread", "channel", "search"].includes(domain ?? "")) {
+if (!(Object.values(DomainArgs) as string[]).includes(domain ?? "")) {
   fail("usage_error", "Expected auth, message, thread, channel, or search command");
 }
 
@@ -44,6 +52,7 @@ if (dryRun && !isWriteCommand(domain, action)) {
 }
 
 if (dryRun) {
+  validateWriteFlags(domain, action, flags);
   const preview = previewWrite(domain, action, flags);
   process.stdout.write(`${JSON.stringify({ ok: true, data: preview, next_cursor: null })}\n`);
   process.exit(0);
@@ -55,35 +64,35 @@ if (!token) fail("auth_error", "Bot token was not found in ~/discord-cli.json");
 const service = new MessagingService(new DiscordApiTransport(token));
 
 let result: Result<unknown>;
-if (domain === "message" && ["send", "reply"].includes(action ?? "")) {
+if (domain === DomainArgs.Message && ["send", "reply"].includes(action ?? "")) {
   const content = required(flags, "content");
   if (action === "send") {
     result = await service.sendToChannel(required(flags, "channel-id"), content);
   } else {
     result = await service.replyToMessage(required(flags, "channel-id"), required(flags, "message-id"), content);
   }
-} else if (domain === "thread" && ["send", "reply"].includes(action ?? "")) {
+} else if (domain === DomainArgs.Thread && ["send", "reply"].includes(action ?? "")) {
   const content = required(flags, "content");
   if (action === "send") {
     result = await service.sendToThread(required(flags, "thread-id"), content);
   } else {
     result = await service.replyInThread(required(flags, "thread-id"), required(flags, "message-id"), content);
   }
-} else if (domain === "channel" && action === "messages") {
+} else if (domain === DomainArgs.Channel && action === "messages") {
   result = await service.listMessages(required(flags, "channel-id"), queryFlags(flags));
-} else if (domain === "thread" && action === "messages") {
+} else if (domain === DomainArgs.Thread && action === "messages") {
   result = await service.listMessages(required(flags, "thread-id"), queryFlags(flags));
-} else if (domain === "message" && action === "get") {
+} else if (domain === DomainArgs.Message && action === "get") {
   result = await service.getMessage(required(flags, "channel-id"), required(flags, "message-id"));
-} else if (domain === "search" && action === "messages") {
+} else if (domain === DomainArgs.Search && action === "messages") {
   result = await service.searchMessages();
-} else if (domain === "thread" && action === "list-active") {
+} else if (domain === DomainArgs.Thread && action === "list-active") {
   result = await service.listActiveThreads(required(flags, "channel-id"));
-} else if (domain === "thread" && action === "get") {
+} else if (domain === DomainArgs.Thread && action === "get") {
   result = await service.getThread(required(flags, "thread-id"));
-} else if (domain === "thread" && action === "create-from-message") {
+} else if (domain === DomainArgs.Thread && action === "create-from-message") {
   result = await service.createThreadFromMessage(required(flags, "channel-id"), required(flags, "message-id"), threadOptions(flags));
-} else if (domain === "thread" && action === "create") {
+} else if (domain === DomainArgs.Thread && action === "create") {
   result = await service.createThread(required(flags, "channel-id"), threadOptions(flags));
 } else {
   fail("usage_error", "Unsupported Discord command");
@@ -203,9 +212,69 @@ function promptHidden(prompt: string): Promise<string> {
 
 function isWriteCommand(domain: string | undefined, action: string | undefined): boolean {
   return (
-    (domain === "message" && ["send", "reply"].includes(action ?? "")) ||
-    (domain === "thread" && ["send", "reply", "create", "create-from-message"].includes(action ?? ""))
+    (domain === DomainArgs.Message && ["send", "reply"].includes(action ?? "")) ||
+    (domain === DomainArgs.Thread && ["send", "reply", "create", "create-from-message"].includes(action ?? ""))
   );
+}
+
+function validateWriteFlags(
+  domain: string | undefined,
+  action: string | undefined,
+  flags: Record<string, string>,
+): void {
+  if (domain === DomainArgs.Message && action === "send") {
+    validateIdFlag(flags, "channel-id");
+    validateContentFlag(flags);
+    return;
+  }
+  if (domain === DomainArgs.Message && action === "reply") {
+    validateIdFlag(flags, "channel-id");
+    validateIdFlag(flags, "message-id");
+    validateContentFlag(flags);
+    return;
+  }
+  if (domain === DomainArgs.Thread && action === "send") {
+    validateIdFlag(flags, "thread-id");
+    validateContentFlag(flags);
+    return;
+  }
+  if (domain === DomainArgs.Thread && action === "reply") {
+    validateIdFlag(flags, "thread-id");
+    validateIdFlag(flags, "message-id");
+    validateContentFlag(flags);
+    return;
+  }
+  if (domain === DomainArgs.Thread && action === "create-from-message") {
+    validateIdFlag(flags, "channel-id");
+    validateIdFlag(flags, "message-id");
+    validateThreadFlags(flags);
+    return;
+  }
+  if (domain === DomainArgs.Thread && action === "create") {
+    validateIdFlag(flags, "channel-id");
+    validateThreadFlags(flags);
+    return;
+  }
+  fail("usage_error", "Unsupported write command");
+}
+
+function validateIdFlag(flags: Record<string, string>, name: string): void {
+  const value = required(flags, name);
+  if (!isId(value)) fail("invalid_input", `--${name} must be a numeric Discord ID`);
+}
+
+function validateContentFlag(flags: Record<string, string>): void {
+  const content = required(flags, "content");
+  if (!contentIsValid(content)) {
+    fail("invalid_input", "--content must be between 1 and 2000 characters");
+  }
+}
+
+function validateThreadFlags(flags: Record<string, string>): void {
+  const options = threadOptions(flags);
+  if (!threadOptionsAreValid(options)) {
+    fail("invalid_input", "Invalid thread options");
+  }
 }
 
 function previewWrite(
@@ -213,56 +282,57 @@ function previewWrite(
   action: string | undefined,
   flags: Record<string, string>,
 ): Record<string, unknown> {
-  if (domain === "message" && action === "send") {
+  if (domain === DomainArgs.Message && action === "send") {
     const channelId = required(flags, "channel-id");
     return {
       dry_run: true,
-      method: "POST",
+      method: HttpMethod.Post,
       path: `/channels/${channelId}/messages`,
       body: messageBody(required(flags, "content")),
     };
   }
-  if (domain === "message" && action === "reply") {
+
+  if (domain === DomainArgs.Message && action === "reply") {
     const channelId = required(flags, "channel-id");
     return {
       dry_run: true,
-      method: "POST",
+      method: HttpMethod.Post,
       path: `/channels/${channelId}/messages`,
       body: messageBody(required(flags, "content"), channelId, required(flags, "message-id")),
     };
   }
-  if (domain === "thread" && action === "send") {
+  if (domain === DomainArgs.Thread && action === "send") {
     const threadId = required(flags, "thread-id");
     return {
       dry_run: true,
-      method: "POST",
+      method: HttpMethod.Post,
       path: `/channels/${threadId}/messages`,
       body: messageBody(required(flags, "content")),
     };
   }
-  if (domain === "thread" && action === "reply") {
+  if (domain === DomainArgs.Thread && action === "reply") {
     const threadId = required(flags, "thread-id");
     return {
       dry_run: true,
-      method: "POST",
+      method: HttpMethod.Post,
       path: `/channels/${threadId}/messages`,
       body: messageBody(required(flags, "content"), threadId, required(flags, "message-id")),
     };
   }
-  if (domain === "thread" && action === "create-from-message") {
+  if (domain === DomainArgs.Thread && action === "create-from-message") {
     const channelId = required(flags, "channel-id");
     return {
       dry_run: true,
-      method: "POST",
+      method: HttpMethod.Post,
       path: `/channels/${channelId}/messages/${required(flags, "message-id")}/threads`,
       body: threadOptions(flags),
     };
   }
-  if (domain === "thread" && action === "create") {
+  if (domain === DomainArgs.Thread && action === "create") {
     const channelId = required(flags, "channel-id");
     return {
       dry_run: true,
-      method: "POST",
+      method: HttpMethod.Post,
       path: `/channels/${channelId}/threads`,
       body: { type: 11, ...threadOptions(flags) },
     };

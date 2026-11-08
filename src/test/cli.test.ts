@@ -26,3 +26,48 @@ test("outputs version JSON envelope with --version --json", async () => {
     next_cursor: null,
   });
 });
+
+test("dry-run rejects invalid content and IDs", async () => {
+  await assert.rejects(
+    () =>
+      execFileAsync("node", [
+        "dist/cli.js",
+        "message",
+        "send",
+        "--channel-id",
+        "not-an-id",
+        "--content",
+        "hello",
+        "--dry-run",
+      ]),
+    (error: { stdout?: string; code?: number }) => {
+      assert.equal(error.code, 2);
+      assert.deepEqual(JSON.parse(error.stdout ?? ""), {
+        ok: false,
+        error: { code: "invalid_input", message: "--channel-id must be a numeric Discord ID" },
+      });
+      return true;
+    },
+  );
+  await assert.rejects(
+    () =>
+      execFileAsync("node", [
+        "dist/cli.js",
+        "message",
+        "send",
+        "--channel-id",
+        "2",
+        "--content",
+        "x".repeat(2001),
+        "--dry-run",
+      ]),
+    (error: { stdout?: string; code?: number }) => {
+      assert.equal(error.code, 2);
+      assert.deepEqual(JSON.parse(error.stdout ?? ""), {
+        ok: false,
+        error: { code: "invalid_input", message: "--content must be between 1 and 2000 characters" },
+      });
+      return true;
+    },
+  );
+});

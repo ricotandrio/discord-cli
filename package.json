@@ -1,6 +1,6 @@
 {
   "name": "discord-cli",
-  "version": "0.0.1-beta",
+  "version": "0.0.1",
   "private": true,
   "license": "MIT",
   "type": "module",
@@ -11,11 +11,19 @@
   "bin": {
     "discord-cli": "dist/cli.js"
   },
+  "files": [
+    "dist",
+    "!dist/test",
+    "skills",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
     "build": "tsc && chmod 755 dist/cli.js",
     "typecheck": "tsc --noEmit",
     "test": "npm run build && node --test dist/test/**/*.test.js",
     "setup": "npm ci && npm run build && npm install --global .",
+    "pack": "npm run build && npm pack",
     "start": "node dist/cli.js"
   },
   "devDependencies": {
