@@ -36,6 +36,11 @@ if (args.includes("--version") || args.includes("-v") || args[0] === "version") 
 
 const [domain, action] = args;
 
+if (domain === undefined) {
+  printHelp();
+  process.exit(0);
+}
+
 if (domain === DomainArgs.Auth) {
   await handleAuth(action);
   process.exit(0);
@@ -378,6 +383,52 @@ function threadOptions(flags: Record<string, string>) {
 function fail(code: string, message: string, details?: Record<string, unknown>): never {
   process.stdout.write(`${JSON.stringify({ ok: false, error: { code, message, ...(details ? { details } : {}) } })}\n`);
   process.exit(EXIT_CODES[code] ?? 1);
+}
+
+function printHelp(): void {
+  process.stdout.write(
+    [
+      "Usage: discord-cli <domain> <action> [flags]",
+      "",
+      "Domains and actions:",
+      "  auth    login          Save a bot token (interactive)",
+      "  auth    status         Show whether a token is saved and healthy",
+      "  auth    logout         Remove the saved bot token",
+      "",
+      "  channel messages       List messages in a channel",
+      "                           --channel-id <id> [--limit <n>] [--before <id>] [--after <id>]",
+      "",
+      "  message send           Send a message to a channel",
+      "                           --channel-id <id> --content <text> [--dry-run]",
+      "  message reply          Reply to a message in a channel",
+      "                           --channel-id <id> --message-id <id> --content <text> [--dry-run]",
+      "  message get            Fetch a single message",
+      "                           --channel-id <id> --message-id <id>",
+      "",
+      "  thread  send           Send a message to a thread",
+      "                           --thread-id <id> --content <text> [--dry-run]",
+      "  thread  reply          Reply to a message in a thread",
+      "                           --thread-id <id> --message-id <id> --content <text> [--dry-run]",
+      "  thread  messages       List messages in a thread",
+      "                           --thread-id <id> [--limit <n>] [--before <id>] [--after <id>]",
+      "  thread  get            Fetch a thread by ID",
+      "                           --thread-id <id>",
+      "  thread  list-active    List active threads in a channel",
+      "                           --channel-id <id>",
+      "  thread  create         Create a new thread in a channel",
+      "                           --channel-id <id> --name <text> [--dry-run]",
+      "  thread  create-from-message  Create a thread from an existing message",
+      "                           --channel-id <id> --message-id <id> --name <text> [--dry-run]",
+      "",
+      "  search  messages       Search messages (not supported by Discord bot API)",
+      "",
+      "Global flags:",
+      "  --version, -v          Print the version and exit",
+      "  --json                 Force JSON output",
+      "  --format json          Force JSON output",
+      "",
+    ].join("\n"),
+  );
 }
 
 async function readVersion(): Promise<string> {
