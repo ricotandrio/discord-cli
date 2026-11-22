@@ -37,50 +37,50 @@ test("rejects content above Discord's documented limit", async () => {
   const service = new MessagingService({
     request: async <T>(): Promise<T> => ({}) as T,
   });
-
-  test("normalizes rejected send requests", async () => {
-    const service = new MessagingService({
-      request: async <T>(): Promise<T> => {
-        throw { status: 403, code: "discord_api_error", message: "Forbidden" };
-      },
-    });
-    const result = await service.sendToChannel("2", "hello");
-    assert.equal(result.ok, false);
-    if (!result.ok) assert.equal(result.error.code, "permission_error");
-  });
-
-  test("rejects path-injection IDs", async () => {
-    const service = new MessagingService({
-      request: async <T>(): Promise<T> => ({}) as T,
-    });
-    const result = await service.sendToChannel("2/messages?x=1", "hello");
-    assert.equal(result.ok, false);
-    if (!result.ok) assert.equal(result.error.code, "invalid_input");
-  });
-
-  test("preserves JSON retry timing and global rate-limit metadata", async () => {
-    const originalFetch = globalThis.fetch;
-    globalThis.fetch = async () =>
-      new Response(JSON.stringify({ message: "Slow down", retry_after: 1.5, global: true }), {
-        status: 429,
-        headers: { "content-type": "application/json", "x-ratelimit-scope": "global" },
-      });
-    try {
-      await assert.rejects(
-        () => new DiscordApiTransport("token").request("/channels/2/messages", { method: "GET" }),
-        (error: { code?: string; details?: Record<string, unknown> }) => {
-          assert.equal(error.code, "rate_limited");
-          assert.deepEqual(error.details, { retry_after: 1.5, scope: "global", global: true });
-          return true;
-        },
-      );
-    } finally {
-      globalThis.fetch = originalFetch;
-    }
-  });
   const result = await service.sendToChannel("2", "x".repeat(2001));
   assert.equal(result.ok, false);
   if (!result.ok) assert.equal(result.error.code, "invalid_input");
+});
+
+test("normalizes rejected send requests", async () => {
+  const service = new MessagingService({
+    request: async <T>(): Promise<T> => {
+      throw { status: 403, code: "discord_api_error", message: "Forbidden" };
+    },
+  });
+  const result = await service.sendToChannel("2", "hello");
+  assert.equal(result.ok, false);
+  if (!result.ok) assert.equal(result.error.code, "permission_error");
+});
+
+test("rejects path-injection IDs", async () => {
+  const service = new MessagingService({
+    request: async <T>(): Promise<T> => ({}) as T,
+  });
+  const result = await service.sendToChannel("2/messages?x=1", "hello");
+  assert.equal(result.ok, false);
+  if (!result.ok) assert.equal(result.error.code, "invalid_input");
+});
+
+test("preserves JSON retry timing and global rate-limit metadata", async () => {
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async () =>
+    new Response(JSON.stringify({ message: "Slow down", retry_after: 1.5, global: true }), {
+      status: 429,
+      headers: { "content-type": "application/json", "x-ratelimit-scope": "global" },
+    });
+  try {
+    await assert.rejects(
+      () => new DiscordApiTransport("token").request("/channels/2/messages", { method: "GET" }),
+      (error: { code?: string; details?: Record<string, unknown> }) => {
+        assert.equal(error.code, "rate_limited");
+        assert.deepEqual(error.details, { retry_after: 1.5, scope: "global", global: true });
+        return true;
+      },
+    );
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
 });
 
 test("reads paginated channel messages", async () => {
