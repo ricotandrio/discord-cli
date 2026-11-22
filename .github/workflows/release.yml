@@ -63,4 +63,5 @@ jobs:
             SHA256SUMS.txt
           generate_release_notes: true
           draft: false
-          prerelease: ${{ contains(github.ref_name, '-alpha') || contains(github.ref_name, '-beta') || contains(github.ref_name, '-rc') }}
+          prerelease: false
+          make_latest: true
