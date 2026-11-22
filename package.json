@@ -24,10 +24,13 @@
     "test": "npm run build && node --test dist/test/**/*.test.js",
     "setup": "npm ci && npm run build && npm install --global .",
     "pack": "npm run build && npm pack",
-    "start": "node dist/cli.js"
+    "start": "node dist/cli.js",
+    "prepare": "husky",
+    "tag": "./scripts/pre-tag-check.sh && echo 'Ready to tag. Run: git tag v$(node -p \"require(\\'./package.json\\').version\\")'"
   },
   "devDependencies": {
     "@types/node": "^22.20.5",
+    "husky": "^9.1.7",
     "typescript": "^5.7.0"
   }
 }
