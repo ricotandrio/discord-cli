@@ -15,22 +15,6 @@ This document describes how to create releases for discord-cli.
 Update the version in `package.json`:
 
 ```bash
-# For beta releases
-npm version prerelease --preid=beta
-
-# For patch releases
-npm version patch
-
-# For minor releases  
-npm version minor
-
-# For major releases
-npm version major
-```
-
-Or manually edit `package.json` and run:
-
-```bash
 npm install  # Syncs package-lock.json
 ```
 
